@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WasteWatch Pro - Settings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .settings-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+        }
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .toggle-switch {
+            width: 50px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 12px;
+            cursor: pointer;
+            position: relative;
+        }
+        .toggle-switch.active { background: #2196f3; }
+        .toggle-switch::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 3px;
+        }
+        .toggle-switch.active::after { left: 27px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">WW</div>
+                <h2>WasteWatch Pro</h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="inventory.html"><i class="fas fa-boxes"></i> Inventory</a>
+                <a href="heatmap.html"><i class="fas fa-fire"></i> Heat Map</a>
+                <a href="recommendations.html"><i class="fas fa-check-circle"></i> Use First</a>
+                <a href="checklist.html"><i class="fas fa-clipboard-list"></i> Checklist</a>
+                <a href="research.html"><i class="fas fa-flask"></i> Research</a>
+                <a href="payroll.html"><i class="fas fa-rupee-sign"></i> Payroll</a>
+                <a href="analytics.html"><i class="fas fa-chart-line"></i> Analytics</a>
+                <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button onclick="logout()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <h1>Settings</h1>
+            <div class="settings-card">
+                <div class="setting-item">
+                    <span><i class="fas fa-moon"></i> Dark Mode</span>
+                    <div class="toggle-switch" id="darkModeToggle" onclick="toggleDarkMode()"></div>
+                </div>
+                <div class="setting-item">
+                    <span><i class="fas fa-bell"></i> Email Notifications</span>
+                    <div class="toggle-switch" id="notifToggle"></div>
+                </div>
+                <div class="setting-item">
+                    <span><i class="fas fa-database"></i> Auto Backup</span>
+                    <div class="toggle-switch" id="backupToggle"></div>
+                </div>
+                <div class="setting-item">
+                    <span><i class="fas fa-language"></i> Language</span>
+                    <select style="padding: 8px;">
+                        <option>English</option>
+                        <option>Hindi</option>
+                        <option>Tamil</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <span><i class="fas fa-chart-line"></i> Chart Type</span>
+                    <select style="padding: 8px;">
+                        <option>Doughnut</option>
+                        <option>Pie</option>
+                        <option>Bar</option>
+                    </select>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const toggle = document.getElementById('darkModeToggle');
+            toggle.classList.toggle('active');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        }
+        
+        function loadSettings() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeToggle').classList.add('active');
+            }
+        }
+        
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+        
+        loadSettings();
+        
+        // Add dark mode styles
+        const style = document.createElement('style');
+        style.textContent = `.dark-mode { background: #1a1a2e; color: white; } .dark-mode .sidebar, .dark-mode .stat-card, .dark-mode .chart-card, .dark-mode .settings-card { background: #16213e; color: white; }`;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

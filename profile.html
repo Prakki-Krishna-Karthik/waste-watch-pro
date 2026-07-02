@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WasteWatch Pro - Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .profile-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .btn-save {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">WW</div>
+                <h2>WasteWatch Pro</h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="inventory.html"><i class="fas fa-boxes"></i> Inventory</a>
+                <a href="heatmap.html"><i class="fas fa-fire"></i> Heat Map</a>
+                <a href="recommendations.html"><i class="fas fa-check-circle"></i> Use First</a>
+                <a href="checklist.html"><i class="fas fa-clipboard-list"></i> Checklist</a>
+                <a href="research.html"><i class="fas fa-flask"></i> Research</a>
+                <a href="payroll.html"><i class="fas fa-rupee-sign"></i> Payroll</a>
+                <a href="analytics.html"><i class="fas fa-chart-line"></i> Analytics</a>
+                <a href="profile.html" class="active"><i class="fas fa-user"></i> Profile</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button onclick="logout()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <h1>My Profile</h1>
+            <div class="profile-card">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="fullName">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" id="phone">
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <input type="text" id="department">
+                </div>
+                <button class="btn-save" onclick="updateProfile()">Save Changes</button>
+            </div>
+            
+            <div class="profile-card" style="margin-top: 20px;">
+                <h3>Change Password</h3>
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPassword">
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword">
+                </div>
+                <button class="btn-save" onclick="changePassword()">Update Password</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        async function loadProfile() {
+            try {
+                const user = await API.get('/auth/me');
+                document.getElementById('fullName').value = user.fullName || '';
+                document.getElementById('email').value = user.email || '';
+                document.getElementById('phone').value = user.phone || '';
+                document.getElementById('department').value = user.department || '';
+            } catch(e) { console.error(e); }
+        }
+        
+        async function updateProfile() {
+            const data = {
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                department: document.getElementById('department').value
+            };
+            await API.put('/profile', data);
+            alert('Profile updated!');
+        }
+        
+        async function changePassword() {
+            const data = {
+                current_password: document.getElementById('currentPassword').value,
+                new_password: document.getElementById('newPassword').value
+            };
+            await API.post('/profile/password', data);
+            alert('Password changed!');
+        }
+        
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+        
+        loadProfile();
+    </script>
+</body>
+</html>

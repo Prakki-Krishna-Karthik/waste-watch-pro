@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WasteWatch Pro - Daily Checklist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .shift-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .shift-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+        }
+        .shift-btn.active { background: #2196f3; color: white; border-color: #2196f3; }
+        .task-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .task-item.completed { opacity: 0.6; text-decoration: line-through; }
+        .task-checkbox { width: 20px; height: 20px; cursor: pointer; }
+        .task-text { flex: 1; }
+        .task-priority { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .priority-high { background: #ffebee; color: #c62828; }
+        .priority-medium { background: #fff3e0; color: #ef6c00; }
+        .add-task {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .add-task input, .add-task select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">WW</div>
+                <h2>WasteWatch Pro</h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="inventory.html"><i class="fas fa-boxes"></i> Inventory</a>
+                <a href="heatmap.html"><i class="fas fa-fire"></i> Heat Map</a>
+                <a href="recommendations.html"><i class="fas fa-check-circle"></i> Use First</a>
+                <a href="checklist.html" class="active"><i class="fas fa-clipboard-list"></i> Checklist</a>
+                <a href="research.html"><i class="fas fa-flask"></i> Research</a>
+                <a href="payroll.html"><i class="fas fa-rupee-sign"></i> Payroll</a>
+                <a href="analytics.html"><i class="fas fa-chart-line"></i> Analytics</a>
+                <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button onclick="logout()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <h1>Daily Nursing Checklist</h1>
+            
+            <div class="shift-buttons">
+                <button class="shift-btn" onclick="selectShift('morning')">🌅 Morning (6AM-2PM)</button>
+                <button class="shift-btn" onclick="selectShift('evening')">🌆 Evening (2PM-10PM)</button>
+                <button class="shift-btn" onclick="selectShift('night')">🌙 Night (10PM-6AM)</button>
+            </div>
+
+            <div id="tasksContainer"></div>
+
+            <div class="add-task">
+                <h4>Add Custom Task</h4>
+                <input type="text" id="newTask" placeholder="Task description" style="width: 60%;">
+                <select id="taskPriority">
+                    <option value="high">High Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="low">Low Priority</option>
+                </select>
+                <button onclick="addTask()" style="background: #2196f3; color: white; border: none; padding: 10px 20px; border-radius: 8px;">Add</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        let currentShift = 'morning';
+        let tasks = [];
+        
+        const defaultTasks = {
+            morning: [
+                { id: 'm1', task: 'Use Amoxicillin batch A789 first', priority: 'high', completed: false },
+                { id: 'm2', task: 'Prepare insulin doses for ICU patients', priority: 'medium', completed: false },
+                { id: 'm3', task: 'Check refrigerator temperatures', priority: 'high', completed: false },
+                { id: 'm4', task: 'ICU Round with Dr. Sharma', priority: 'medium', completed: false }
+            ],
+            evening: [
+                { id: 'e1', task: 'Restock emergency department medicines', priority: 'medium', completed: false },
+                { id: 'e2', task: 'Count controlled substances', priority: 'high', completed: false },
+                { id: 'e3', task: 'Update patient charts', priority: 'low', completed: false }
+            ],
+            night: [
+                { id: 'n1', task: 'Prepare morning medications', priority: 'medium', completed: false },
+                { id: 'n2', task: 'Check all expiry dates', priority: 'high', completed: false },
+                { id: 'n3', task: 'Stock take in pharmacy', priority: 'medium', completed: false }
+            ]
+        };
+        
+        function loadTasks() {
+            const saved = localStorage.getItem(`checklist_${currentShift}`);
+            if (saved) tasks = JSON.parse(saved);
+            else tasks = [...defaultTasks[currentShift]];
+            displayTasks();
+        }
+        
+        function displayTasks() {
+            const container = document.getElementById('tasksContainer');
+            container.innerHTML = tasks.map(task => `
+                <div class="task-item ${task.completed ? 'completed' : ''}">
+                    <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask('${task.id}')">
+                    <div class="task-text">${task.task}</div>
+                    <span class="task-priority priority-${task.priority}">${task.priority.toUpperCase()}</span>
+                </div>
+            `).join('');
+            
+            if (tasks.length === 0) container.innerHTML = '<div class="loading">No tasks for this shift</div>';
+        }
+        
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) task.completed = !task.completed;
+            localStorage.setItem(`checklist_${currentShift}`, JSON.stringify(tasks));
+            displayTasks();
+        }
+        
+        function addTask() {
+            const taskText = document.getElementById('newTask').value;
+            const priority = document.getElementById('taskPriority').value;
+            if (!taskText) return;
+            const newTask = { id: Date.now().toString(), task: taskText, priority, completed: false };
+            tasks.push(newTask);
+            localStorage.setItem(`checklist_${currentShift}`, JSON.stringify(tasks));
+            displayTasks();
+            document.getElementById('newTask').value = '';
+        }
+        
+        function selectShift(shift) {
+            currentShift = shift;
+            document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            loadTasks();
+        }
+        
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+        
+        loadTasks();
+        document.querySelector('.shift-btn').classList.add('active');
+    </script>
+</body>
+</html>

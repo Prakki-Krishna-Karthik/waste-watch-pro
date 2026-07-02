@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WasteWatch Pro - Payroll Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .payroll-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .payroll-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .status-paid { color: #00C851; }
+        .status-pending { color: #ff8800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">WW</div>
+                <h2>WasteWatch Pro</h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="inventory.html"><i class="fas fa-boxes"></i> Inventory</a>
+                <a href="heatmap.html"><i class="fas fa-fire"></i> Heat Map</a>
+                <a href="recommendations.html"><i class="fas fa-check-circle"></i> Use First</a>
+                <a href="checklist.html"><i class="fas fa-clipboard-list"></i> Checklist</a>
+                <a href="research.html"><i class="fas fa-flask"></i> Research</a>
+                <a href="payroll.html" class="active"><i class="fas fa-rupee-sign"></i> Payroll</a>
+                <a href="analytics.html"><i class="fas fa-chart-line"></i> Analytics</a>
+                <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button onclick="logout()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <h1>Payroll Management</h1>
+            <div id="payrollList"></div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        async function loadPayroll() {
+            try {
+                const salaries = await API.get('/payroll/salaries');
+                const container = document.getElementById('payrollList');
+                container.innerHTML = salaries.map(s => `
+                    <div class="payroll-card">
+                        <div class="payroll-header">
+                            <div><strong>${s.employeeName || 'Employee'}</strong></div>
+                            <div class="status-${s.status}">${s.status || 'pending'}</div>
+                        </div>
+                        <div>Month: ${s.month}</div>
+                        <div>Amount: ₹${s.amount?.toLocaleString() || '0'}</div>
+                    </div>
+                `).join('');
+            } catch(e) { console.error(e); }
+        }
+        
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+        
+        loadPayroll();
+    </script>
+</body>
+</html>

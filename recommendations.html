@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WasteWatch Pro - Use First Recommendations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .recommendation-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .recommendation-card.critical { border-left-color: #ff4444; background: linear-gradient(to right, #ffebee, white); }
+        .recommendation-card.high { border-left-color: #ff8800; background: linear-gradient(to right, #fff3e0, white); }
+        .use-btn {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .use-btn:hover { background: #1976d2; }
+        .expiry-days { font-size: 28px; font-weight: 700; }
+        .summary-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 30px;
+        }
+        .summary-stat { text-align: center; }
+        .summary-value { font-size: 28px; font-weight: 700; color: #2196f3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">WW</div>
+                <h2>WasteWatch Pro</h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="inventory.html"><i class="fas fa-boxes"></i> Inventory</a>
+                <a href="heatmap.html"><i class="fas fa-fire"></i> Heat Map</a>
+                <a href="recommendations.html" class="active"><i class="fas fa-check-circle"></i> Use First</a>
+                <a href="checklist.html"><i class="fas fa-clipboard-list"></i> Checklist</a>
+                <a href="research.html"><i class="fas fa-flask"></i> Research</a>
+                <a href="payroll.html"><i class="fas fa-rupee-sign"></i> Payroll</a>
+                <a href="analytics.html"><i class="fas fa-chart-line"></i> Analytics</a>
+                <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button onclick="logout()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <h1>Use First Recommendations</h1>
+            
+            <div class="summary-bar">
+                <div class="summary-stat"><div class="summary-value" id="criticalCount">0</div><div>Critical Items</div></div>
+                <div class="summary-stat"><div class="summary-value" id="highCount">0</div><div>High Priority</div></div>
+                <div class="summary-stat"><div class="summary-value" id="totalAtRisk">0</div><div>Units at Risk</div></div>
+            </div>
+
+            <div id="recommendationsList"></div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        let recommendations = [];
+        
+        async function loadRecommendations() {
+            try {
+                const batches = await API.get('/inventory/expiring?days=60');
+                recommendations = batches.map(b => ({ ...b, daysLeft: b.daysLeft || 0 }));
+                displayRecommendations();
+            } catch(e) { console.error(e); }
+        }
+        
+        function displayRecommendations() {
+            const container = document.getElementById('recommendationsList');
+            const critical = recommendations.filter(r => r.daysLeft <= 30);
+            const high = recommendations.filter(r => r.daysLeft > 30 && r.daysLeft <= 60);
+            const totalAtRisk = recommendations.reduce((sum, r) => sum + (r.quantity || 0), 0);
+            
+            document.getElementById('criticalCount').textContent = critical.length;
+            document.getElementById('highCount').textContent = high.length;
+            document.getElementById('totalAtRisk').textContent = totalAtRisk;
+            
+            const all = [...critical, ...high];
+            if (all.length === 0) {
+                container.innerHTML = '<div class="loading">No recommendations at this time.</div>';
+                return;
+            }
+            
+            container.innerHTML = all.map(item => `
+                <div class="recommendation-card ${item.daysLeft <= 30 ? 'critical' : 'high'}">
+                    <div>
+                        <h3>${item.medicineName || 'Medicine'}</h3>
+                        <p>Batch: ${item.batchNumber || '-'} | Stock: ${item.quantity || 0} units</p>
+                        <p>Expires: ${item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : '-'}</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="expiry-days" style="color: ${item.daysLeft <= 30 ? '#ff4444' : '#ff8800'}">${item.daysLeft}d</div>
+                        <div style="font-size: 12px;">until expiry</div>
+                        <button class="use-btn" onclick="markAsUsed('${item._id}')"><i class="fas fa-check"></i> Use This Batch</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function markAsUsed(id) {
+            if (confirm('Mark this batch as used?')) {
+                await API.delete(`/inventory/batches/${id}`);
+                loadRecommendations();
+                alert('Batch marked as used!');
+            }
+        }
+        
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+        
+        loadRecommendations();
+    </script>
+</body>
+</html>

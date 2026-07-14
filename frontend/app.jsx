@@ -296,4 +296,51 @@ function App() {
     fetchData();
   };
 
-  const
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete axios.defaults.headers.common['Authorization'];
+    setUser(null);
+    toast.success('Logged out');
+  };
+
+  const handleDeleteMedicine = async (id) => {
+    if (!confirm('Delete this medicine?')) return;
+    try {
+      await axios.delete(`${API}/medicines/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      toast.success('Medicine deleted');
+      setMedicines(medicines.filter(m => m._id !== id));
+    } catch (err) {
+      toast.error('Delete failed');
+    }
+  };
+
+  if (!user) return <Login onLogin={handleLogin} />;
+
+  const renderPage = () => {
+    switch(currentPage) {
+      case 'dashboard': return <Dashboard medicines={medicines} batches={batches} heatMap={heatMap} payroll={payroll} />;
+      case 'medicines': return <MedicineList medicines={medicines} onDelete={handleDeleteMedicine} onEdit={() => {}} />;
+      case 'batches': return <div className="text-gray-500">Batches page - Coming soon</div>;
+      case 'heatmap': return <div className="text-gray-500">Heat Map page - Coming soon</div>;
+      case 'priority': return <div className="text-gray-500">Priority List page - Coming soon</div>;
+      case 'payroll': return <div className="text-gray-500">Payroll page - Coming soon</div>;
+      default: return <Dashboard medicines={medicines} batches={batches} heatMap={heatMap} payroll={payroll} />;
+    }
+  };
+
+  return (
+    <>
+      <Toaster position="top-right" />
+      <Layout user={user} onLogout={handleLogout} currentPage={currentPage} setCurrentPage={setCurrentPage}>
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : renderPage()}
+      </Layout>
+    </>
+  );
+}
+
+export default App;
